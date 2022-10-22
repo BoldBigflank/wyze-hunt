@@ -1,7 +1,7 @@
-import * as dotenv from 'dotenv'
 import sqlite3 from 'sqlite3'
 import fetch from 'cross-fetch'
 import chalk from 'chalk'
+import * as dotenv from 'dotenv'
 dotenv.config()
 
 const db = new sqlite3.Database('./flights.db')

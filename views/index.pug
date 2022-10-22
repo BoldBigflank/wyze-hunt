@@ -1,0 +1,57 @@
+doctype html
+//
+  @license
+  Copyright 2019 Google LLC. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+head
+  title= title
+  script(src='https://polyfill.io/v3/polyfill.min.js?features=default')
+  // jsFiddle will insert css and js
+  style.
+    #map {
+    height: 75vh;
+    /* The height is 400 pixels */
+    width: 100%;
+    /* The width is the width of the web page */
+    }
+h3 My Google Maps Demo
+// The div element for the map
+#map
+//
+  The `defer` attribute causes the callback to execute after the full HTML
+  document has been parsed. For non-blocking uses, avoiding race conditions,
+  and consistent behavior across browsers, consider loading using Promises
+  with https://www.npmjs.com/package/@googlemaps/js-api-loader.
+script.
+  /**
+  * @license
+  * Copyright 2019 Google LLC. All Rights Reserved.
+  * SPDX-License-Identifier: Apache-2.0
+  */
+  // Initialize and add the map
+  function initMap() {
+    const flights = !{JSON.stringify(flightsArray)};
+    const heatmapData = flights.map((flight) => {
+        const { lat, lng, weight } = flight
+        return {
+            location: new google.maps.LatLng(lat, lng),
+            weight
+
+        }
+    })
+    const center = { lat: 47.5, lng: -122.466}
+    //- const center = { lat: -122.466, lng: 47.500 }; // Vashon
+    //- const center = { lat: -25.344, lng: 131.031 };
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 10,
+        mapTypeId: 'satellite',
+        center
+    });
+
+    const heatmap = new google.maps.visualization.HeatmapLayer({
+        data: heatmapData
+    });
+    heatmap.setMap(map);
+  }
+  window.initMap = initMap;
+script(src='https://maps.googleapis.com/maps/api/js?key=AIzaSyArqcpGAUw3u3U2N4Jtam3mqslLFYQs8Lc&libraries=visualization&callback=initMap' defer='')
