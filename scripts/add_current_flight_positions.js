@@ -10,6 +10,9 @@ const FA_API_KEY=process.env.FA_API_KEY
 
 const FA_SERVER='https://aeroapi.flightaware.com/aeroapi'
 
+const args = process.argv.slice(2)
+const intensity = args[0] ? parseInt(args[0]) || 1 : 1
+
 const main = async () => {
     prepareDatabase()
     const flights = await getFlightData()
@@ -21,9 +24,13 @@ const main = async () => {
 const insertIntoDatabase = (flights) => {
     const columns = Object.keys(flights[0])
     const values = flights.map((flight) => {
-        const vs = columns.map((c) => typeof flight[c] == 'number' ? flight[c] : `'${flight[c]}'`).join(',')
-        return `(${vs})`
+        const vs = columns.map((c) => typeof flight[c] == 'number' ? flight[c] : `'${flight[c]}'`)
+        vs.push(intensity)
+        return `(${vs.join(',')})`
     })
+    // Include intensity
+    columns.push('intensity')
+
     const insertSQL = `INSERT INTO flights(${columns.join(',')})
     VALUES ${values.join(',')};`
     db.run(insertSQL)
@@ -41,7 +48,8 @@ const prepareDatabase = () => {
         latitude REAL NOT NULL,
         longitude REAL NOT NULL,
         timestamp TEXT NOT NULL,
-        update_type TEXT NOT NULL
+        update_type TEXT NOT NULL,
+        intensity INTEGER NOT NULL
     );`);
 
 }
@@ -50,12 +58,6 @@ const getFlightData = async () => {
     // Top left 47.930625, -122.818466
     // Bottom right 47.247207, -122.016924
     // Pull FA positions from the api
-    // Gotta do {range lon 47 48} {range lat -122 -123}
-    // https://aeroapi.flightaware.com/aeroapi/flights/search/positions?query=%7B%3C+alt+500%7D+%7Brange+lon+47+48%7D+%7Brange+lat+-123+-122%7D" \
-    // https://aeroapi.flightaware.com/aeroapi/flights/search/positions?query=%7B%3C+alt+500%7D+%7Brange+lon+47+48%7D+%7Brange+lat+-123+-122%7D
-    // -H "Accept: application/json; charset=UTF-8" \
-    // -H "x-apikey:  FA_API_KEY" \
-
     let done = false
     let url = ''
     let positions = []
@@ -63,7 +65,7 @@ const getFlightData = async () => {
         if (!url) {
             const lastMinute = Math.floor(new Date().valueOf() / 1000 - 60)
             const rtQuery = {
-                query: `{< alt 500} {range lon -123 -122} {range lat 47 48} {> clock ${lastMinute}}`,
+                query: `{< alt 500} {range lon -123 -121} {range lat 47 48} {> clock ${lastMinute}}`,
                 unique_flights: true
             }
             const qs = new URLSearchParams(rtQuery)
